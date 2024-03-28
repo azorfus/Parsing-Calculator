@@ -23,14 +23,13 @@ def lex(S):
 			buffer = buffer + S[i]
 			digit = True
 			d_end = False
-
-		elif S[i].isdigit() and i == len(S) - 1:
-			buffer = buffer + S[i]
-			tok = Token()
-			tok.typ = "int"
-			tok.value = buffer
-			tokens.append(tok)
-			buffer = ""
+			
+			if i == len(S) - 1:
+				tok = Token()
+				tok.typ = "int"
+				tok.value = buffer
+				tokens.append(tok)
+				buffer = ""
 		
 		else:
 			if digit == True:
@@ -86,21 +85,17 @@ def lex(S):
 
 def parse(index, tokens):
 	node = Node()
-	if index + 1 == len(tokens):
-		if tokens[index].typ == "int":
+	if index + 2 > len(tokens):
+		if tokens[len(tokens) - 1].typ == "int":
 			node.term = True
-			node.l_value = float(tokens(index).value)
+			node.l_value = float(tokens[len(tokens) - 1].value)
 		else:
 			node.term = True
 			node.l_value = 0
-		return node
-	elif index + 1 > len(tokens):
-		return node
-		
-	
-	node.l_value = tokens[index]
-	node.op = tokens[index + 1]
-	node.r_value = parse(index + 2, tokens)
+	else:
+		node.l_value = tokens[index]
+		node.op = tokens[index + 1]
+		node.r_value = parse(index + 2, tokens)
 
 	return node
 
@@ -111,6 +106,9 @@ while running:
 		break
 
 	tokens = lex(inp)
+	for i in tokens:
+		print(i.value, end = " ")
+	print()
 	AST = parse(0, tokens)
 
 	# Evaluation of AST here!!!
@@ -125,5 +123,4 @@ while running:
 	#      +
 	#    *   4
 	#  3   5  
-
 
