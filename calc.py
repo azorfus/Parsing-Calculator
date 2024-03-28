@@ -1,6 +1,6 @@
 running = True
 
-types = ["int", "o_b", "c_b", "add", "sub", "mul", "div"]
+types = ["int", "add_sub", "mul", "div"]
 
 class Token:
 	typ = ""
@@ -8,7 +8,7 @@ class Token:
 
 class Node:
 	term = False
-	op = ""
+	op = None
 	l_value = None
 	r_value = None
 
@@ -44,27 +44,15 @@ def lex(S):
 					buffer = ""
 					digit = False
 		
-		if S[i] == '(':
+		if S[i] == '+':
 			tok = Token()
-			tok.typ = "o_b"
-			tok.value = "("
-			tokens.append(tok)
-
-		elif S[i] == ')':
-			tok = Token()
-			tok.typ = "c_b"
-			tok.value = ")"
-			tokens.append(tok)
-
-		elif S[i] == '+':
-			tok = Token()
-			tok.typ = "add"
+			tok.typ = "add_sub"
 			tok.value = "+"
 			tokens.append(tok)
 
 		elif S[i] == '-':
 			tok = Token()
-			tok.typ = "sub"
+			tok.typ = "add_sub"
 			tok.value = "-"
 			tokens.append(tok)
 
@@ -99,6 +87,47 @@ def parse(index, tokens):
 
 	return node
 
+def fix_AST(node):
+	fixed_AST = Node()
+	if node.op == "add_sub" and node.r_value.term == False:
+		fixed_AST.l_value = node.l_value
+		fixed_AST.op = node.op
+		fixed_AST.r_value = fix_AST(node.r_value)
+	
+	elif node.op == "mul" and node.r_value.term == False:
+		if node.r_value.op.typ == "add_sub":
+			temp = node.r_value
+			node.r_value = node.r_value.l_value
+			fixed_AST.l_value = node
+			if node.r_value.op.value == "+":
+				fixed_AST.op.value = "+"
+			else:
+				fixed_AST.op.value = "-"
+			fixed_AST.r_value = fix_AST(temp.r_value)
+
+	elif node.op == "div" and node.r_value.term == False:
+		if node.r_value.op.typ == "add_sub":
+			temp = node.r_value
+			node.r_value = node.r_value.l_value
+			fixed_AST.l_value = node
+			if node.r_value.op.value == "+":
+				fixed_AST.op.value = "+"
+			else:
+				fixed_AST.op.value = "-"
+			fixed_AST.r_value = fix_AST(temp.r_value)
+
+		elif node.r_value.op.typ == "mul":
+			temp = node.r_value
+			node.r_value = node.r_value.l_value
+			fixed_AST.l_value = node
+			fixed_AST.op.value = "*"
+			fixed_AST.r_value = fix_AST(temp.r_value)
+
+	else:
+		fixed_AST = Node()
+
+	return fixed_AST
+
 while running:
 	inp = str(input(">> "))
 	if inp == "quit":
@@ -110,6 +139,7 @@ while running:
 		print(i.value, end = " ")
 	print()
 	AST = parse(0, tokens)
+	AST = fix_AST(AST)
 
 	# Evaluation of AST here!!!
 	# We take care of operator precedence when evaluating
@@ -123,4 +153,3 @@ while running:
 	#      +
 	#    *   4
 	#  3   5  
-
