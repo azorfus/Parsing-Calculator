@@ -8,9 +8,9 @@ class Token:
 
 class Node:
 	term = False
-	op = None
-	l_value = None
-	r_value = None
+	op = Token()
+	l_value = Token()
+	r_value = Token()
 
 def lex(S):
 	buffer = ""
@@ -76,10 +76,10 @@ def parse(index, tokens):
 	if index + 2 > len(tokens):
 		if tokens[len(tokens) - 1].typ == "int":
 			node.term = True
-			node.l_value = float(tokens[len(tokens) - 1].value)
+			node.l_value.value = float(tokens[len(tokens) - 1].value)
 		else:
 			node.term = True
-			node.l_value = 0
+			node.l_value.value = 0
 	else:
 		node.l_value = tokens[index]
 		node.op = tokens[index + 1]
@@ -89,42 +89,59 @@ def parse(index, tokens):
 
 def fix_AST(node):
 	fixed_AST = Node()
-	if node.op == "add_sub" and node.r_value.term == False:
+	if node.op.typ == "add_sub" and node.r_value.term == False:
 		fixed_AST.l_value = node.l_value
 		fixed_AST.op = node.op
 		fixed_AST.r_value = fix_AST(node.r_value)
 	
-	elif node.op == "mul" and node.r_value.term == False:
+	elif node.op.typ == "mul" and node.r_value.term == False:
 		if node.r_value.op.typ == "add_sub":
 			temp = node.r_value
 			node.r_value = node.r_value.l_value
 			fixed_AST.l_value = node
-			if node.r_value.op.value == "+":
+			if temp.op.value == "+":
+				fixed_AST.op = Token()
 				fixed_AST.op.value = "+"
 			else:
-				fixed_AST.op.value = "-"
+				fixed_AST.op = Token()
+				temp.value = "-"
 			fixed_AST.r_value = fix_AST(temp.r_value)
+		else:
+			fixed_AST.l_value = node.l_value
+			fixed_AST.op = node.op
+			fixed_AST.r_value = fix_AST(node.r_value)
 
-	elif node.op == "div" and node.r_value.term == False:
+	elif node.op.typ == "div" and node.r_value.term == False:
 		if node.r_value.op.typ == "add_sub":
 			temp = node.r_value
 			node.r_value = node.r_value.l_value
 			fixed_AST.l_value = node
-			if node.r_value.op.value == "+":
+			if temp.op.value == "+":
+				fixed_AST.op = Token()
 				fixed_AST.op.value = "+"
 			else:
-				fixed_AST.op.value = "-"
+				fixed_AST.op = Token()
+				temp.value = "-"
 			fixed_AST.r_value = fix_AST(temp.r_value)
+		else:
+			fixed_AST.l_value = node.l_value
+			fixed_AST.op = node.op
+			fixed_AST.r_value = fix_AST(node.r_value)
 
-		elif node.r_value.op.typ == "mul":
+		if node.r_value.op.typ == "mul":
 			temp = node.r_value
 			node.r_value = node.r_value.l_value
 			fixed_AST.l_value = node
+			fixed_AST.op = Token()
 			fixed_AST.op.value = "*"
 			fixed_AST.r_value = fix_AST(temp.r_value)
+		else:
+			fixed_AST.l_value = node.l_value
+			fixed_AST.op = node.op
+			fixed_AST.r_value = fix_AST(node.r_value)
 
 	else:
-		fixed_AST = Node()
+		fixed_AST = node
 
 	return fixed_AST
 
@@ -140,6 +157,10 @@ while running:
 	print()
 	AST = parse(0, tokens)
 	AST = fix_AST(AST)
+	print(AST.op.value)
+	print(AST.l_value.op.value)
+	print(AST.l_value.r_value.value)
+	print(AST.l_value.l_value.op.value)
 
 	# Evaluation of AST here!!!
 	# We take care of operator precedence when evaluating
@@ -153,3 +174,5 @@ while running:
 	#      +
 	#    *   4
 	#  3   5  
+
+
