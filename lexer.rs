@@ -9,7 +9,7 @@ pub enum TokenType {
     Opt,
     Cpt,
     Scln,
-    Equ, // You used it but didn't define it before
+    Equ, 
     Eof,
 }
 
