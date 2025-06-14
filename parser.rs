@@ -10,26 +10,24 @@ pub enum ASTNode {
 }
 
 fn parse_factor(tokens: &[Token], pos: &mut usize) -> Option<ASTNode> {
-    while *pos < tokens.len() {
-        match tokens[*pos].ttype {
-            TokenType::Num => {
-                let num = tokens[*pos].value.parse::<f64>().ok()?;
-                *pos += 1;
-                return Some(ASTNode::Number(num));
-            }
-
-            TokenType::Opt => {
-                *pos += 1;
-                let node = parse_expr(tokens, pos)?;
-                if *pos >= tokens.len() || tokens[*pos].ttype != TokenType::Cpt {
-                    return None;
-                }
-                *pos += 1;
-                return Some(node);
-            }
-
-            _ => return None,
+    match tokens[*pos].ttype {
+        TokenType::Num => {
+            let num = tokens[*pos].value.parse::<f64>().ok()?;
+            *pos += 1;
+            return Some(ASTNode::Number(num));
         }
+
+        TokenType::Opt => {
+            *pos += 1;
+            let node = parse_expr(tokens, pos)?;
+            if *pos >= tokens.len() || tokens[*pos].ttype != TokenType::Cpt {
+                return None;
+            }
+            *pos += 1;
+            return Some(node);
+        }
+
+        _ => return None,
     }
     None
 }
