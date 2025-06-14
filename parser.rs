@@ -20,7 +20,7 @@ fn parse_factor(tokens: &[Token], pos: &mut usize) -> Option<ASTNode> {
         TokenType::Opt => {
             *pos += 1;
             let node = parse_expr(tokens, pos)?;
-            if *pos >= tokens.len() || tokens[*pos].ttype != TokenType::Cpt {
+            if tokens[*pos].ttype != TokenType::Cpt {
                 return None;
             }
             *pos += 1;
